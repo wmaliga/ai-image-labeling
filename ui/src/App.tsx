@@ -1,25 +1,37 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useState } from 'react';
+
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { Box, Button, TextField } from '@mui/material'
+
+import { ReactComponent as LogoSvg } from './logo.svg';
 import './App.css';
 
-function App() {
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
+
+const App = (): React.JSX.Element => {
+  const [token, setToken] = useState<string>('');
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline/>
+      <Box className="App">
+        <Box className="App-container">
+          <LogoSvg className="App-logo"/>
+          <TextField
+            label="Provide API token"
+            margin="normal"
+            value={token}
+            onChange={event => setToken(event.target.value)}
+          />
+          <Button variant="contained" disabled={!token}>Start</Button>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }
 
