@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, Button, TextField, Typography } from '@mui/material'
+import { Box, Button, ButtonGroup, TextField } from '@mui/material'
 
 import { ReactComponent as LogoSvg } from './logo.svg';
 import './App.css';
@@ -36,10 +36,38 @@ const TokenForm = (props: {
   )
 }
 
-const ImageLabeling = (): React.JSX.Element => {
+const ImageLabeling = (props: {
+  processFile: (file: File) => void;
+}): React.JSX.Element => {
+  const [file, setFile] = useState<File>();
+  const fileInput = useRef<HTMLInputElement | null>(null);
+
   return (
     <>
-      <Typography>TODO</Typography>
+      <Box p={1}>
+        {file
+          ? <img alt="Uploaded" src={URL.createObjectURL(file)}/>
+          : <LogoSvg className="App-logo"/>}
+      </Box>
+      <ButtonGroup>
+        <Button
+          variant="outlined"
+          onClick={() => fileInput?.current?.click()}>
+          Upload file
+        </Button>
+        <input
+          type="file"
+          data-testid="upload-input"
+          ref={fileInput}
+          style={{ display: 'none' }}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFile(event.target.files?.[0])}/>
+        <Button
+          variant="outlined"
+          disabled={!file}
+          onClick={() => file && props.processFile(file)}>
+          Process
+        </Button>
+      </ButtonGroup>
     </>
   )
 }
@@ -53,7 +81,7 @@ const App = (): React.JSX.Element => {
       <Box className="App">
         <Box className="App-container">
           {token
-            ? <ImageLabeling/>
+            ? <ImageLabeling processFile={file => alert(`Processing: ${file.name}`)}/>
             : <TokenForm setToken={setToken}/>}
         </Box>
       </Box>

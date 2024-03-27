@@ -3,22 +3,53 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 import App from './App';
 
-test('renders start page', () => {
-  render(<App/>);
+describe('application', () => {
+  beforeEach(() => {
+    window.URL.createObjectURL = jest.fn();
+    window.alert = jest.fn();
+  });
 
-  const tokenInput = screen.getByLabelText('Provide API token');
-  expect(tokenInput).toBeInTheDocument();
-});
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
 
-test('opens image labeling', () => {
-  render(<App/>);
+  test('renders start page', () => {
+    render(<App/>);
 
-  const tokenInput = screen.getByLabelText('Provide API token');
-  fireEvent.change(tokenInput, { target: { value: 'token' } })
+    const tokenInput = screen.getByLabelText('Provide API token');
+    expect(tokenInput).toBeInTheDocument();
+  });
 
-  const startButton = screen.getByText('Start');
-  fireEvent.click(startButton);
+  test('opens image labeling', () => {
+    render(<App/>);
 
-  const todo = screen.getByText('TODO');
-  expect(todo).toBeInTheDocument();
+    const tokenInput = screen.getByLabelText('Provide API token');
+    fireEvent.change(tokenInput, { target: { value: 'token' } });
+
+    const startButton = screen.getByText('Start');
+    fireEvent.click(startButton);
+
+    const uploadButton = screen.getByText('Upload file');
+    expect(uploadButton).toBeInTheDocument();
+  });
+
+  test('uploads file', () => {
+    const file = new File(['data'], 'file.jpeg', { type: 'image/jpeg' });
+
+    render(<App/>);
+
+    const tokenInput = screen.getByLabelText('Provide API token');
+    fireEvent.change(tokenInput, { target: { value: 'token' } });
+
+    const startButton = screen.getByText('Start');
+    fireEvent.click(startButton);
+
+    const uploadInput = screen.getByTestId('upload-input');
+    fireEvent.change(uploadInput, { target: { files: [file] } });
+
+    const processButton = screen.getByText('Process');
+    fireEvent.click(processButton);
+
+    expect(window.alert).toHaveBeenCalled();
+  });
 });
