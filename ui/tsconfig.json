@@ -22,5 +22,15 @@
   },
   "include": [
     "src"
-  ]
+  ],
+  // AWS CDK configuration
+  "ts-node": {
+    "compilerOptions": {
+      "lib": ["es2018"],
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "target": "ES2018"
+    },
+    "include": ["lib", "bin"]
+  }
 }
