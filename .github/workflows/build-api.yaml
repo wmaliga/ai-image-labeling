@@ -1,0 +1,36 @@
+name: Build API
+
+on:
+  push:
+    paths:
+      - 'api/**'
+  pull_request:
+    paths:
+      - 'api/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    environment: dev
+
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Test
+        run: pytest
