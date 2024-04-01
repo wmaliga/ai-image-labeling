@@ -2,4 +2,9 @@ from function import lambda_handler
 
 
 def test_function():
-    assert lambda_handler({}, {}) == {'test': 'data'}
+    expected_response = {
+        'statusCode': 200,
+        'body': 'test'
+    }
+
+    assert lambda_handler({}, {}) == expected_response

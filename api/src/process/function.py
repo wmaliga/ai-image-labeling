@@ -1,2 +1,7 @@
 def lambda_handler(event, context):
-    return {'test': 'data'}
+    print(event)
+
+    return {
+        'statusCode': 200,
+        'body': 'test'
+    }

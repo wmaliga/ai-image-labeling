@@ -3,6 +3,7 @@ import os
 
 import aws_cdk as cdk
 
+from lib.api_stack import ApiStack
 from lib.image_stack import ImageStack
 
 region = os.environ['AWS_REGION']
@@ -15,6 +16,15 @@ stack_name = f'ai-image-labeling-{stage}'
 
 app = cdk.App()
 
-ImageStack(app, f'{stack_name}-image')
+api_stack = ApiStack(
+    app,
+    f'{stack_name}-api'
+)
+
+ImageStack(
+    app,
+    f'{stack_name}-image',
+    api_gateway=api_stack.api_gateway,
+)
 
 app.synth()
