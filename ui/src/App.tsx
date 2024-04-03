@@ -7,6 +7,8 @@ import { Box, Button, ButtonGroup, TextField } from '@mui/material'
 import { ReactComponent as LogoSvg } from './logo.svg';
 import './App.css';
 
+const API_URL = process.env.REACT_APP_API_URL || '';
+
 const theme = createTheme({
   palette: {
     mode: 'dark',
@@ -75,13 +77,44 @@ const ImageLabeling = (props: {
 const App = (): React.JSX.Element => {
   const [token, setToken] = useState<string>('');
 
+  const fileToBase64 = async (file: File) => {
+    const removePrefix = (base64: string | ArrayBuffer | null) =>
+      typeof base64 === 'string' ? base64.split('base64,')[1] : '';
+
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(removePrefix(reader.result));
+      reader.onerror = reject;
+    });
+  }
+
+  const processFile = async (file: File) => {
+    const body = {
+      file: {
+        name: file.name,
+        data: await fileToBase64(file),
+      }
+    }
+
+    const result = await fetch(`${API_URL}/images`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    console.log(await result.json());
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline/>
       <Box className="App">
         <Box className="App-container">
           {token
-            ? <ImageLabeling processFile={file => alert(`Processing: ${file.name}`)}/>
+            ? <ImageLabeling processFile={processFile}/>
             : <TokenForm setToken={setToken}/>}
         </Box>
       </Box>

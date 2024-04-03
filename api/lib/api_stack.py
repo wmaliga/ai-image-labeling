@@ -15,4 +15,5 @@ class ApiStack(Stack):
             self,
             id=construct_id,
             rest_api_name=construct_id,
+            default_cors_preflight_options=apigw.CorsOptions(allow_origins=apigw.Cors.ALL_ORIGINS)
         )

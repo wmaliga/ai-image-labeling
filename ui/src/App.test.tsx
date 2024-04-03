@@ -1,12 +1,16 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import App from './App';
 
 describe('application', () => {
   beforeEach(() => {
     window.URL.createObjectURL = jest.fn();
-    window.alert = jest.fn();
+
+    jest.spyOn(global, 'fetch');
+    (global.fetch as jest.Mock).mockResolvedValue({
+      json: jest.fn().mockResolvedValue({})
+    })
   });
 
   afterEach(() => {
@@ -33,7 +37,7 @@ describe('application', () => {
     expect(uploadButton).toBeInTheDocument();
   });
 
-  test('uploads file', () => {
+  test('uploads file', async () => {
     const file = new File(['data'], 'file.jpeg', { type: 'image/jpeg' });
 
     render(<App/>);
@@ -50,6 +54,19 @@ describe('application', () => {
     const processButton = screen.getByText('Process');
     fireEvent.click(processButton);
 
-    expect(window.alert).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/images'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            file: {
+              name: 'file.jpeg',
+              data: 'ZGF0YQ=='
+            }
+          }),
+        }),
+      )
+    );
   });
 });
