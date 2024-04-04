@@ -2,13 +2,22 @@ import React, { useRef, useState } from 'react';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, Button, ButtonGroup, TextField } from '@mui/material'
+import { Box, Button, ButtonGroup, Chip, TextField } from '@mui/material'
 
 import { ReactComponent as LogoSvg } from './logo.svg';
 import './App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || '';
 const API_TOKEN = process.env.REACT_APP_API_TOKEN || '';
+
+type AwsRekognitionLabel = {
+  Name: string,
+  Confidence: number,
+}
+
+export type AwsRekognitionResponse = {
+  Labels: AwsRekognitionLabel[],
+}
 
 const theme = createTheme({
   palette: {
@@ -39,18 +48,26 @@ const TokenForm = (props: {
   )
 }
 
-const ImageLabeling = (props: {
+const ImageComponent = (props: {
+  response?: AwsRekognitionResponse;
   processFile: (file: File) => void;
 }): React.JSX.Element => {
   const [file, setFile] = useState<File>();
   const fileInput = useRef<HTMLInputElement | null>(null);
 
+  const { response, processFile } = props;
+
   return (
     <>
-      <Box p={1}>
+      <Box pb={1}>
         {file
           ? <img alt="Uploaded" src={URL.createObjectURL(file)}/>
           : <LogoSvg className="App-logo"/>}
+      </Box>
+      <Box pb={2} display="flex" justifyContent="flex-end">
+        {(response?.Labels || []).map(label =>
+          <Box pr={1} key={label.Name}><Chip label={`${label.Name} ${Math.round(label.Confidence)}%`}/></Box>
+        )}
       </Box>
       <ButtonGroup>
         <Button
@@ -67,7 +84,7 @@ const ImageLabeling = (props: {
         <Button
           variant="outlined"
           disabled={!file}
-          onClick={() => file && props.processFile(file)}>
+          onClick={() => file && processFile(file)}>
           Process
         </Button>
       </ButtonGroup>
@@ -77,6 +94,7 @@ const ImageLabeling = (props: {
 
 const App = (): React.JSX.Element => {
   const [token, setToken] = useState<string>('');
+  const [response, setResponse] = useState<AwsRekognitionResponse>();
 
   const fileToBase64 = async (file: File) => {
     const removePrefix = (base64: string | ArrayBuffer | null) =>
@@ -107,7 +125,10 @@ const App = (): React.JSX.Element => {
       body: JSON.stringify(body),
     });
 
-    console.log(await result.json());
+    const response = (await result.json()) as AwsRekognitionResponse;
+    setResponse(response);
+
+    console.log(response);
   }
 
   return (
@@ -116,7 +137,7 @@ const App = (): React.JSX.Element => {
       <Box className="App">
         <Box className="App-container">
           {token
-            ? <ImageLabeling processFile={processFile}/>
+            ? <ImageComponent response={response} processFile={processFile}/>
             : <TokenForm setToken={setToken}/>}
         </Box>
       </Box>

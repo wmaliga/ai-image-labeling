@@ -1,7 +1,28 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-import App from './App';
+import App, { AwsRekognitionResponse } from './App';
+
+const response: AwsRekognitionResponse = {
+  Labels: [
+    { Name: 'Sunflower', Confidence: 99 }
+  ]
+};
+
+const inputText = (text: string, value: string) => {
+  const input = screen.getByLabelText(text);
+  fireEvent.change(input, { target: { value } });
+}
+
+const inputFile = (testId: string, file: File) => {
+  const input = screen.getByTestId(testId);
+  fireEvent.change(input, { target: { files: [file] } });
+}
+
+const clickButton = (text: string) => {
+  const button = screen.getByText(text);
+  fireEvent.click(button);
+}
 
 describe('application', () => {
   beforeEach(() => {
@@ -9,7 +30,7 @@ describe('application', () => {
 
     jest.spyOn(global, 'fetch');
     (global.fetch as jest.Mock).mockResolvedValue({
-      json: jest.fn().mockResolvedValue({})
+      json: jest.fn().mockResolvedValue(response)
     })
   });
 
@@ -27,11 +48,8 @@ describe('application', () => {
   test('opens image labeling', () => {
     render(<App/>);
 
-    const tokenInput = screen.getByLabelText('Provide API token');
-    fireEvent.change(tokenInput, { target: { value: 'token' } });
-
-    const startButton = screen.getByText('Start');
-    fireEvent.click(startButton);
+    inputText('Provide API token', 'token');
+    clickButton('Start');
 
     const uploadButton = screen.getByText('Upload file');
     expect(uploadButton).toBeInTheDocument();
@@ -42,17 +60,10 @@ describe('application', () => {
 
     render(<App/>);
 
-    const tokenInput = screen.getByLabelText('Provide API token');
-    fireEvent.change(tokenInput, { target: { value: 'token' } });
-
-    const startButton = screen.getByText('Start');
-    fireEvent.click(startButton);
-
-    const uploadInput = screen.getByTestId('upload-input');
-    fireEvent.change(uploadInput, { target: { files: [file] } });
-
-    const processButton = screen.getByText('Process');
-    fireEvent.click(processButton);
+    inputText('Provide API token', 'token');
+    clickButton('Start');
+    inputFile('upload-input', file);
+    clickButton('Process');
 
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith(
@@ -71,6 +82,21 @@ describe('application', () => {
           }),
         }),
       )
+    );
+  });
+
+  test('displays labels', async () => {
+    const file = new File(['data'], 'file.jpeg', { type: 'image/jpeg' });
+
+    render(<App/>);
+
+    inputText('Provide API token', 'token');
+    clickButton('Start');
+    inputFile('upload-input', file);
+    clickButton('Process');
+
+    await waitFor(() =>
+      expect(screen.getByText('Sunflower 99%')).toBeInTheDocument()
     );
   });
 });
