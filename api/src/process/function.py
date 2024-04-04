@@ -6,6 +6,7 @@ from datetime import date, datetime
 import boto3
 
 s3 = boto3.client('s3')
+rekognition = boto3.client('rekognition')
 
 
 def lambda_handler(event, context):
@@ -26,10 +27,19 @@ def lambda_handler(event, context):
         Body=file_data,
     )
 
+    response = rekognition.detect_labels(
+        Image={
+            'S3Object': {
+                'Bucket': images_bucket,
+                'Name': file_key,
+            },
+        }
+    )
+
     return {
         'statusCode': 200,
         'headers': {
             'Access-Control-Allow-Origin': '*'
         },
-        'body': json.dumps('ok')
+        'body': json.dumps(response)
     }

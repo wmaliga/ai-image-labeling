@@ -1,6 +1,7 @@
 from aws_cdk import (
     Stack,
     aws_apigateway as apigw,
+    aws_iam as iam,
     aws_lambda as _lambda,
     aws_s3 as s3,
 )
@@ -33,4 +34,9 @@ class ImageStack(Stack):
         )
 
         api_images.add_method('POST', apigw.LambdaIntegration(process_lambda))
-        images_bucket.grant_write(process_lambda)
+        images_bucket.grant_read_write(process_lambda)
+        process_lambda.add_to_role_policy(iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=['rekognition:DetectLabels'],
+            resources=['*'],
+        ))
