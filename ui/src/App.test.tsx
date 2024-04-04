@@ -59,6 +59,10 @@ describe('application', () => {
         expect.stringContaining('/images'),
         expect.objectContaining({
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': 'token',
+          },
           body: JSON.stringify({
             file: {
               name: 'file.jpeg',

@@ -8,6 +8,7 @@ import { ReactComponent as LogoSvg } from './logo.svg';
 import './App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || '';
+const API_TOKEN = process.env.REACT_APP_API_TOKEN || '';
 
 const theme = createTheme({
   palette: {
@@ -18,7 +19,7 @@ const theme = createTheme({
 const TokenForm = (props: {
   setToken: (token: string) => void;
 }): React.JSX.Element => {
-  const [token, setToken] = useState<string>('');
+  const [token, setToken] = useState<string>(API_TOKEN);
 
   return (
     <>
@@ -101,6 +102,7 @@ const App = (): React.JSX.Element => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-key': token,
       },
       body: JSON.stringify(body),
     });
