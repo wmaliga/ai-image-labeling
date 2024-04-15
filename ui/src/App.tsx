@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, Button, ButtonGroup, Chip, TextField } from '@mui/material'
+import { Box, Button, Chip, TextField } from '@mui/material'
 
 import { ReactComponent as LogoSvg } from './logo.svg';
 import './App.css';
@@ -10,13 +10,26 @@ import './App.css';
 const API_URL = process.env.REACT_APP_API_URL || '';
 const API_TOKEN = process.env.REACT_APP_API_TOKEN || '';
 
+type AwsRekognitionBoundingBox = {
+  Left: number;
+  Top: number;
+  Width: number;
+  Height: number;
+}
+
+type AwsRekognitionInstance = {
+  BoundingBox: AwsRekognitionBoundingBox;
+  Confidence: number;
+}
+
 type AwsRekognitionLabel = {
-  Name: string,
-  Confidence: number,
+  Name: string;
+  Confidence: number;
+  Instances: AwsRekognitionInstance[];
 }
 
 export type AwsRekognitionResponse = {
-  Labels: AwsRekognitionLabel[],
+  Labels: AwsRekognitionLabel[];
 }
 
 const theme = createTheme({
@@ -48,6 +61,39 @@ const TokenForm = (props: {
   )
 }
 
+const InstanceBox = (props: {
+  label: AwsRekognitionLabel;
+  instance: AwsRekognitionInstance;
+}): React.JSX.Element => {
+  const { label, instance } = props;
+  const name = label.Name;
+  const box = instance.BoundingBox;
+
+  return (
+    <Box
+      key={`box-${box.Left}-${box.Top}`}
+      sx={{
+        border: '1px solid red',
+        position: 'absolute',
+        left: `${Math.round(box.Left * 100)}%`,
+        top: `${Math.round(box.Top * 100)}%`,
+        width: `${Math.round(box.Width * 100)}%`,
+        height: `${Math.round(box.Height * 100)}%`,
+      }}>
+      <Box
+        className="App-description"
+        sx={{ position: 'absolute', right: 0 }}>
+        {`${Math.round(instance.Confidence)}%`}
+      </Box>
+      <Box
+        className="App-description"
+        sx={{ position: 'absolute', left: 0 }}>
+        {name.toUpperCase()}
+      </Box>
+    </Box>
+  )
+}
+
 const ImageComponent = (props: {
   response?: AwsRekognitionResponse;
   processFile: (file: File) => void;
@@ -58,19 +104,27 @@ const ImageComponent = (props: {
   const { response, processFile } = props;
 
   return (
-    <>
-      <Box pb={1}>
+    <Box className="App-content">
+      <Box pb={1} className="App-frame">
         {file
-          ? <img alt="Uploaded" src={URL.createObjectURL(file)}/>
+          ? <img className="App-image" alt="Uploaded" src={URL.createObjectURL(file)}/>
           : <LogoSvg className="App-logo"/>}
+        {(response?.Labels || [])
+          .map(label => label.Instances.map(instance => [label, instance] as const))
+          .flat(1)
+          .map(([label, instance]) =>
+            <InstanceBox label={label} instance={instance}/>
+          )
+        }
       </Box>
-      <Box pb={2} display="flex" justifyContent="flex-end">
+      <Box className="App-labels">
         {(response?.Labels || []).map(label =>
           <Box pr={1} key={label.Name}><Chip label={`${label.Name} ${Math.round(label.Confidence)}%`}/></Box>
         )}
       </Box>
-      <ButtonGroup>
+      <Box className="App-buttons">
         <Button
+          sx={{ padding: 1 }}
           variant="outlined"
           onClick={() => fileInput?.current?.click()}>
           Upload file
@@ -87,8 +141,8 @@ const ImageComponent = (props: {
           onClick={() => file && processFile(file)}>
           Process
         </Button>
-      </ButtonGroup>
-    </>
+      </Box>
+    </Box>
   )
 }
 

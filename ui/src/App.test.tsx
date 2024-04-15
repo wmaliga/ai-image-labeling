@@ -5,7 +5,14 @@ import App, { AwsRekognitionResponse } from './App';
 
 const response: AwsRekognitionResponse = {
   Labels: [
-    { Name: 'Sunflower', Confidence: 99 }
+    {
+      Name: 'Sunflower', Confidence: 99, Instances: [
+        {
+          BoundingBox: { Left: 0, Top: 0, Width: 0, Height: 0 },
+          Confidence: 98,
+        }
+      ]
+    }
   ]
 };
 
@@ -95,8 +102,10 @@ describe('application', () => {
     inputFile('upload-input', file);
     clickButton('Process');
 
-    await waitFor(() =>
-      expect(screen.getByText('Sunflower 99%')).toBeInTheDocument()
-    );
+    await waitFor(() => {
+      expect(screen.getByText('Sunflower 99%')).toBeInTheDocument();
+      expect(screen.getByText('SUNFLOWER')).toBeInTheDocument();
+      expect(screen.getByText('98%')).toBeInTheDocument();
+    });
   });
 });
