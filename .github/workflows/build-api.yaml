@@ -59,3 +59,39 @@ jobs:
 
       - name: Check formatting
         run: black --check .
+
+  template:
+    runs-on: ubuntu-20.04
+    environment: dev
+    env:
+      APP_STAGE: ${{ vars.APP_STAGE }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Install Node.js version 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      - name: Check CloudFormation template
+        run: cdk synth --all
