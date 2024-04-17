@@ -3,6 +3,7 @@ from aws_cdk import (
     aws_apigateway as apigw,
     aws_iam as iam,
     aws_lambda as _lambda,
+    aws_lambda_python_alpha as lambda_python,
     aws_s3 as s3,
 )
 from constructs import Construct
@@ -21,13 +22,14 @@ class ImageStack(Stack):
             bucket_name=construct_id
         )
 
-        process_lambda = _lambda.Function(
+        process_lambda = lambda_python.PythonFunction(
             self,
             id=f'{construct_id}-process',
             function_name=f'{construct_id}-process',
             runtime=_lambda.Runtime.PYTHON_3_11,
-            code=_lambda.Code.from_asset('src/process'),
-            handler='function.lambda_handler',
+            entry='src/process',
+            index='function.py',
+            handler='lambda_handler',
             environment={
                 'IMAGES_BUCKET_NAME': images_bucket.bucket_name,
             }

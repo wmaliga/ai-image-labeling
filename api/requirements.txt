@@ -1,3 +1,5 @@
 aws-cdk-lib==2.134.0
+aws-cdk.aws-lambda-python-alpha
 constructs>=10.0.0,<11.0.0
 boto3
+aws-lambda-powertools

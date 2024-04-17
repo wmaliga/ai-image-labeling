@@ -4,12 +4,13 @@ import os
 from datetime import date, datetime
 
 import boto3
+from aws_lambda_powertools.utilities.typing import LambdaContext
 
 s3 = boto3.client('s3')
 rekognition = boto3.client('rekognition')
 
 
-def lambda_handler(event, context):
+def lambda_handler(event: dict, context: LambdaContext) -> dict:
     images_bucket = os.environ['IMAGES_BUCKET_NAME']
 
     prefix = date.today()
