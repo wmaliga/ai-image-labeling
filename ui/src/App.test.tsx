@@ -108,4 +108,23 @@ describe('application', () => {
       expect(screen.getByText('98%')).toBeInTheDocument();
     });
   });
+
+  test('displays errors', async () => {
+    const file = new File(['data'], 'file.jpeg', { type: 'image/jpeg' });
+
+    (global.fetch as jest.Mock).mockImplementation(() => {
+      throw new Error('fetch error');
+    });
+
+    render(<App/>);
+
+    inputText('Provide API token', 'token');
+    clickButton('Start');
+    inputFile('upload-input', file);
+    clickButton('Process');
+
+    await waitFor(() => {
+      expect(screen.getByText('fetch error')).toBeInTheDocument();
+    });
+  });
 });

@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, Button, Chip, TextField } from '@mui/material'
+import { Alert, Box, Button, Chip, TextField } from '@mui/material'
 
 import { ReactComponent as LogoSvg } from './logo.svg';
 import './App.css';
@@ -95,13 +95,14 @@ const InstanceBox = (props: {
 }
 
 const ImageComponent = (props: {
+  processing: boolean;
   response?: AwsRekognitionResponse;
   processFile: (file: File) => void;
 }): React.JSX.Element => {
   const [file, setFile] = useState<File>();
   const fileInput = useRef<HTMLInputElement | null>(null);
 
-  const { response, processFile } = props;
+  const { processing, response, processFile } = props;
 
   return (
     <Box className="App-content">
@@ -126,6 +127,7 @@ const ImageComponent = (props: {
         <Button
           sx={{ padding: 1 }}
           variant="outlined"
+          disabled={processing}
           onClick={() => fileInput?.current?.click()}>
           Upload file
         </Button>
@@ -137,7 +139,7 @@ const ImageComponent = (props: {
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFile(event.target.files?.[0])}/>
         <Button
           variant="outlined"
-          disabled={!file}
+          disabled={processing || !file}
           onClick={() => file && processFile(file)}>
           Process
         </Button>
@@ -148,6 +150,8 @@ const ImageComponent = (props: {
 
 const App = (): React.JSX.Element => {
   const [token, setToken] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [processing, setProcessing] = useState<boolean>(false);
   const [response, setResponse] = useState<AwsRekognitionResponse>();
 
   const fileToBase64 = async (file: File) => {
@@ -163,26 +167,36 @@ const App = (): React.JSX.Element => {
   }
 
   const processFile = async (file: File) => {
-    const body = {
-      file: {
-        name: file.name,
-        data: await fileToBase64(file),
+    setProcessing(true);
+    setError('');
+    setResponse(undefined);
+
+    try {
+      const body = {
+        file: {
+          name: file.name,
+          data: await fileToBase64(file),
+        }
       }
+
+      const result = await fetch(`${API_URL}/images`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': token,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const response = (await result.json()) as AwsRekognitionResponse;
+      setResponse(response);
+
+      console.log(response);
+    } catch (error) {
+      error instanceof Error && setError(error.message);
     }
 
-    const result = await fetch(`${API_URL}/images`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': token,
-      },
-      body: JSON.stringify(body),
-    });
-
-    const response = (await result.json()) as AwsRekognitionResponse;
-    setResponse(response);
-
-    console.log(response);
+    setProcessing(false);
   }
 
   return (
@@ -190,8 +204,12 @@ const App = (): React.JSX.Element => {
       <CssBaseline/>
       <Box className="App">
         <Box className="App-container">
+          <Box className="App-header">
+            {processing && <Alert severity="info">Processing image...</Alert>}
+            {error && <Alert severity="error">{error}</Alert>}
+          </Box>
           {token
-            ? <ImageComponent response={response} processFile={processFile}/>
+            ? <ImageComponent processing={processing} response={response} processFile={processFile}/>
             : <TokenForm setToken={setToken}/>}
         </Box>
       </Box>

@@ -13,6 +13,8 @@
   }
 }
 
+/* Everything must be positioned absolute to allow instance box drawing */
+
 .App-container {
   background-color: #282c34;
   height: 100vh;
@@ -22,6 +24,14 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+}
+
+.App-header {
+  position: absolute;
+  left: 30%;
+  top: 5%;
+  width: 40%;
+  height: 20%;
 }
 
 .App-content {
