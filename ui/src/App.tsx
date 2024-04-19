@@ -71,7 +71,6 @@ const InstanceBox = (props: {
 
   return (
     <Box
-      key={`box-${box.Left}-${box.Top}`}
       sx={{
         border: '1px solid red',
         position: 'absolute',
@@ -114,7 +113,10 @@ const ImageComponent = (props: {
           .map(label => label.Instances.map(instance => [label, instance] as const))
           .flat(1)
           .map(([label, instance]) =>
-            <InstanceBox label={label} instance={instance}/>
+            <InstanceBox
+              key={`${label}-${instance.BoundingBox.Left}`}
+              label={label}
+              instance={instance}/>
           )
         }
       </Box>
