@@ -1,35 +1,36 @@
 import React from 'react';
+
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-import App, { AwsRekognitionResponse } from './App';
+import { App, IAwsRekognitionResponse } from './App';
 
-const response: AwsRekognitionResponse = {
+const response: IAwsRekognitionResponse = {
   Labels: [
     {
       Name: 'Sunflower', Confidence: 99, Instances: [
         {
           BoundingBox: { Left: 0, Top: 0, Width: 0, Height: 0 },
           Confidence: 98,
-        }
-      ]
-    }
-  ]
+        },
+      ],
+    },
+  ],
 };
 
 const inputText = (text: string, value: string) => {
   const input = screen.getByLabelText(text);
   fireEvent.change(input, { target: { value } });
-}
+};
 
 const inputFile = (testId: string, file: File) => {
   const input = screen.getByTestId(testId);
   fireEvent.change(input, { target: { files: [file] } });
-}
+};
 
 const clickButton = (text: string) => {
   const button = screen.getByText(text);
   fireEvent.click(button);
-}
+};
 
 describe('application', () => {
   beforeEach(() => {
@@ -37,8 +38,8 @@ describe('application', () => {
 
     jest.spyOn(global, 'fetch');
     (global.fetch as jest.Mock).mockResolvedValue({
-      json: jest.fn().mockResolvedValue(response)
-    })
+      json: jest.fn().mockResolvedValue(response),
+    });
   });
 
   afterEach(() => {
@@ -84,8 +85,8 @@ describe('application', () => {
           body: JSON.stringify({
             file: {
               name: 'file.jpeg',
-              data: 'ZGF0YQ=='
-            }
+              data: 'ZGF0YQ==',
+            },
           }),
         }),
       )

@@ -1,35 +1,37 @@
 import React, { useRef, useState } from 'react';
 
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Alert, Box, Button, Chip, TextField } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Alert, Box, Button, Chip, TextField } from '@mui/material'
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-import { ReactComponent as LogoSvg } from './logo.svg';
 import './App.css';
+import { ReactComponent as LogoSvg } from './logo.svg';
+
+const PERCENT = 100;
 
 const API_URL = process.env.REACT_APP_API_URL || '';
 const API_TOKEN = process.env.REACT_APP_API_TOKEN || '';
 
-type AwsRekognitionBoundingBox = {
+interface IAwsRekognitionBoundingBox {
   Left: number;
   Top: number;
   Width: number;
   Height: number;
 }
 
-type AwsRekognitionInstance = {
-  BoundingBox: AwsRekognitionBoundingBox;
+interface IAwsRekognitionInstance {
+  BoundingBox: IAwsRekognitionBoundingBox;
   Confidence: number;
 }
 
-type AwsRekognitionLabel = {
+interface IAwsRekognitionLabel {
   Name: string;
   Confidence: number;
-  Instances: AwsRekognitionInstance[];
+  Instances: IAwsRekognitionInstance[];
 }
 
-export type AwsRekognitionResponse = {
-  Labels: AwsRekognitionLabel[];
+export interface IAwsRekognitionResponse {
+  Labels: IAwsRekognitionLabel[];
 }
 
 const theme = createTheme({
@@ -50,7 +52,7 @@ const TokenForm = (props: {
         label="Provide API token"
         margin="normal"
         value={token}
-        onChange={event => setToken(event.target.value)}/>
+        onChange={(event) => setToken(event.target.value)}/>
       <Button
         variant="contained"
         disabled={!token}
@@ -58,12 +60,12 @@ const TokenForm = (props: {
         Start
       </Button>
     </>
-  )
-}
+  );
+};
 
 const InstanceBox = (props: {
-  label: AwsRekognitionLabel;
-  instance: AwsRekognitionInstance;
+  label: IAwsRekognitionLabel;
+  instance: IAwsRekognitionInstance;
 }): React.JSX.Element => {
   const { label, instance } = props;
   const name = label.Name;
@@ -74,10 +76,10 @@ const InstanceBox = (props: {
       sx={{
         border: '1px solid red',
         position: 'absolute',
-        left: `${Math.round(box.Left * 100)}%`,
-        top: `${Math.round(box.Top * 100)}%`,
-        width: `${Math.round(box.Width * 100)}%`,
-        height: `${Math.round(box.Height * 100)}%`,
+        left: `${Math.round(box.Left * PERCENT)}%`,
+        top: `${Math.round(box.Top * PERCENT)}%`,
+        width: `${Math.round(box.Width * PERCENT)}%`,
+        height: `${Math.round(box.Height * PERCENT)}%`,
       }}>
       <Box
         className="App-description"
@@ -90,15 +92,16 @@ const InstanceBox = (props: {
         {name.toUpperCase()}
       </Box>
     </Box>
-  )
-}
+  );
+};
 
 const ImageComponent = (props: {
   processing: boolean;
-  response?: AwsRekognitionResponse;
+  response?: IAwsRekognitionResponse;
   processFile: (file: File) => void;
 }): React.JSX.Element => {
   const [file, setFile] = useState<File>();
+  // tslint:disable-next-line:no-null-keyword
   const fileInput = useRef<HTMLInputElement | null>(null);
 
   const { processing, response, processFile } = props;
@@ -110,18 +113,18 @@ const ImageComponent = (props: {
           ? <img className="App-image" alt="Uploaded" src={URL.createObjectURL(file)}/>
           : <LogoSvg className="App-logo"/>}
         {(response?.Labels || [])
-          .map(label => label.Instances.map(instance => [label, instance] as const))
+          .map((label) => label.Instances.map((instance) => [label, instance] as const))
           .flat(1)
           .map(([label, instance]) =>
             <InstanceBox
-              key={`${label}-${instance.BoundingBox.Left}`}
+              key={`${label.Name}-${instance.BoundingBox.Left}`}
               label={label}
               instance={instance}/>
           )
         }
       </Box>
       <Box className="App-labels">
-        {(response?.Labels || []).map(label =>
+        {(response?.Labels || []).map((label) =>
           <Box pr={1} key={label.Name}><Chip label={`${label.Name} ${Math.round(label.Confidence)}%`}/></Box>
         )}
       </Box>
@@ -147,14 +150,14 @@ const ImageComponent = (props: {
         </Button>
       </Box>
     </Box>
-  )
-}
+  );
+};
 
-const App = (): React.JSX.Element => {
+export const App = (): React.JSX.Element => {
   const [token, setToken] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [processing, setProcessing] = useState<boolean>(false);
-  const [response, setResponse] = useState<AwsRekognitionResponse>();
+  const [response, setResponse] = useState<IAwsRekognitionResponse>();
 
   const fileToBase64 = async (file: File) => {
     const removePrefix = (base64: string | ArrayBuffer | null) =>
@@ -166,7 +169,7 @@ const App = (): React.JSX.Element => {
       reader.onload = () => resolve(removePrefix(reader.result));
       reader.onerror = reject;
     });
-  }
+  };
 
   const processFile = async (file: File) => {
     setProcessing(true);
@@ -178,8 +181,8 @@ const App = (): React.JSX.Element => {
         file: {
           name: file.name,
           data: await fileToBase64(file),
-        }
-      }
+        },
+      };
 
       const result = await fetch(`${API_URL}/images`, {
         method: 'POST',
@@ -190,16 +193,16 @@ const App = (): React.JSX.Element => {
         body: JSON.stringify(body),
       });
 
-      const response = (await result.json()) as AwsRekognitionResponse;
-      setResponse(response);
-
-      console.log(response);
+      const resp = (await result.json()) as IAwsRekognitionResponse;
+      setResponse(resp);
     } catch (error) {
-      error instanceof Error && setError(error.message);
+      if (error instanceof Error) {
+        setError(error.message);
+      }
     }
 
     setProcessing(false);
-  }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -217,6 +220,4 @@ const App = (): React.JSX.Element => {
       </Box>
     </ThemeProvider>
   );
-}
-
-export default App;
+};

@@ -1,15 +1,16 @@
-import { Construct } from 'constructs';
+/* tslint:disable:no-unused-expression */
 import {
-  Stack,
-  StageProps,
   aws_cloudfront as cloudfront,
   aws_cloudfront_origins as origins,
   aws_s3 as s3,
   aws_s3_deployment as s3_deployment,
+  Stack,
+  StageProps,
 } from 'aws-cdk-lib';
+import { Construct } from 'constructs';
 
 export class ApplicationStack extends Stack {
-  constructor(scope: Construct, id: string, props: StageProps) {
+  public constructor(scope: Construct, id: string, props: StageProps) {
     super(scope, id, props);
 
     const bucket = new s3.Bucket(this, id, {
