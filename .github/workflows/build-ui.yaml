@@ -24,7 +24,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Node.js version w0
+      - name: Install Node.js version 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -50,7 +50,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Node.js version w0
+      - name: Install Node.js version 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -60,3 +60,29 @@ jobs:
 
       - name: Test
         run: npm run test
+
+  lint:
+    runs-on: ubuntu-20.04
+    environment: dev
+    needs: [ build ]
+    env:
+      REACT_APP_API_URL: ${{ vars.REACT_APP_API_URL }}
+
+    defaults:
+      run:
+        working-directory: ui
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js version 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Node.js install
+        run: npm ci
+
+      - name: ESLint check
+        run: npm run lint
