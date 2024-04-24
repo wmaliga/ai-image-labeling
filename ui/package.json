@@ -29,6 +29,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "coverage": "react-scripts test --coverage --coverageReporters=cobertura --watchAll=false",
     "eject": "react-scripts eject",
     "lint": "tslint **/*.ts **/*.tsx"
   },
