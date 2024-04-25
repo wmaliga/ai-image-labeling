@@ -94,3 +94,37 @@ jobs:
 
       - name: ESLint check
         run: npm run lint
+
+  template:
+    runs-on: ubuntu-20.04
+    environment: dev
+    needs: [ build ]
+    env:
+      APP_STAGE: ${{ vars.APP_STAGE }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      REACT_APP_API_URL: ${{ vars.REACT_APP_API_URL }}
+
+    defaults:
+      run:
+        working-directory: ui
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js version 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Node.js install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      - name: Check CloudFormation template
+        run: cdk synth --all
