@@ -3,6 +3,8 @@ import json
 import os
 from datetime import date, datetime
 
+from pydantic import BaseModel, field_validator
+
 import boto3
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
@@ -10,15 +12,34 @@ s3 = boto3.client("s3")
 rekognition = boto3.client("rekognition")
 
 
-def lambda_handler(event: dict, context: LambdaContext) -> dict:
+class File(BaseModel):
+    name: str
+    data: str
+
+    @field_validator("data")
+    def data_to_base64(cls, value):
+        if not value:
+            raise ValueError("data is required")
+        try:
+            return base64.b64decode(value.encode())
+        except Exception:
+            raise ValueError("invalid base64 data")
+
+
+class Body(BaseModel):
+    file: File
+
+
+def lambda_handler(event, context: LambdaContext) -> dict:
     images_bucket = os.environ["IMAGES_BUCKET_NAME"]
 
     prefix = date.today()
     timestamp = datetime.now().isoformat()
 
-    body = json.loads(event["body"])
-    file_name = body["file"]["name"]
-    file_data = base64.b64decode(body["file"]["data"].encode())
+    body = Body.model_validate_json(event["body"])
+
+    file_name = body.file.name
+    file_data = body.file.data
 
     file_key = f"{prefix}/{timestamp}_{file_name}"
 
